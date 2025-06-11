@@ -1,0 +1,133 @@
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu20.04
+
+# 设置时区
+ENV DEBIAN_FRONTEND=noninteractive TZ=Asia/Shanghai
+ENV PYCHARM_VERSIONS=2025.1
+ENV PYCHARM_URL=https://bj.bcebos.com/petite-mark/public_read/vipshop/Jetbrains/pycharm-${PYCHARM_VERSIONS}.tar.gz
+# 设置pyenv
+ENV PYENV_VERSION=2.5.0
+ENV PYENV_URL=https://bj.bcebos.com/petite-mark/public_read/vipshop/Jetbrains/pyenv-${PYENV_VERSION}.zip
+# 设置python
+ENV PYTHON_VERSIONS=3.9.9
+ENV PYTHON_URL=https://bj.bcebos.com/petite-mark/public_read/vipshop/Jetbrains/Python-${PYTHON_VERSIONS}.tar.xz
+ENV PYTHON_VERSIONS2=3.12.5
+ENV PYTHON_URL2=https://bj.bcebos.com/petite-mark/public_read/vipshop/Jetbrains/Python-${PYTHON_VERSIONS2}.tar.xz
+ENV PYTHON_VERSIONS3=3.6.0
+ENV PYTHON_URL3=https://bj.bcebos.com/petite-mark/public_read/vipshop/Jetbrains/Python-${PYTHON_VERSIONS3}.tar.xz
+
+# 设置pycharm config
+ENV PYCHARM_CONFIG=https://bj.bcebos.com/petite-mark/public_read/vipshop/Jetbrains/PyCharm${PYCHARM_VERSIONS}_config.zip
+# 设置pycharm plugins
+ENV PYCHARM_PLUGINS_URL=https://bj.bcebos.com/petite-mark/public_read/vipshop/Jetbrains/PyCharm${PYCHARM_VERSIONS}_plugins.zip
+# 设置pycharm start.sh
+ENV START_BASH=https://bj.bcebos.com/petite-mark/public_read/vipshop/Jetbrains/restart.sh
+
+# 安装必要的依赖
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    sudo \
+    openjdk-11-jdk \
+    libx11-6 \
+    libxcomposite1 \
+    libxrandr2 \
+    libxss1 \
+    libgdk-pixbuf2.0-0 \
+    libgtk-3-0 \
+    xauth \
+    libbz2-dev \
+    libncurses5-dev \
+    libffi-dev \
+    libreadline-dev \
+    libssl-dev \
+    zlib1g-dev \
+    build-essential \
+    libsqlite3-dev \
+    tk-dev \
+    libgdbm-dev \
+    libc6-dev \
+    liblzma-dev \
+    libncursesw5-dev \
+    git \
+    python3-pip \
+    python-is-python3 \
+    wget \
+    unzip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# 下载并安装PyCharm
+RUN wget ${PYCHARM_URL} -O /tmp/pycharm.tar.gz \
+    && tar -xvzf /tmp/pycharm.tar.gz -C /opt/ \
+    && rm /tmp/pycharm.tar.gz
+
+# 设置PyCharm环境变量
+ENV PYCHARM_HOME=/opt/pycharm-${PYCHARM_VERSIONS}
+ENV PATH=${PYCHARM_HOME}/bin:$PATH
+
+# 配置 Pycharm 缓存
+RUN wget ${PYCHARM_CONFIG} -O ./PyCharm${PYCHARM_VERSIONS}.zip && \
+    mkdir -p ~/.config/JetBrains && \
+    tar -xvzf PyCharm${PYCHARM_VERSIONS}.zip -C ~/.config/JetBrains/ && \
+    rm PyCharm${PYCHARM_VERSIONS}.zip
+    
+# 配置 Pycharm 插件
+RUN wget ${PYCHARM_PLUGINS_URL} -O PyCharm${PYCHARM_VERSIONS}.zip && \
+    mkdir -p ~/.local/share/JetBrains && \
+    tar -xvzf PyCharm${PYCHARM_VERSIONS}.zip -C ~/.local/share/JetBrains && \
+    rm PyCharm${PYCHARM_VERSIONS}.zip
+
+# 安装pyenv
+RUN wget ${PYENV_URL} -O pyenv.zip && unzip pyenv.zip && mv pyenv-${PYENV_VERSION}/ ~/.pyenv && rm pyenv.zip
+RUN mkdir -p ~/.pyenv/cache && wget ${PYTHON_URL} -O ~/.pyenv/cache/Python-${PYTHON_VERSIONS}.tar.xz && wget ${PYTHON_URL2} -O ~/.pyenv/cache/Python-${PYTHON_VERSIONS2}.tar.xz && wget ${PYTHON_URL3} -O ~/.pyenv/cache/Python-${PYTHON_VERSIONS3}.tar.xz
+RUN ln -s ~/.pyenv/bin/pyenv /usr/bin/pyenv && pyenv install ${PYTHON_VERSIONS} && pyenv global ${PYTHON_VERSIONS} && pyenv install ${PYTHON_VERSIONS2} && pyenv install ${PYTHON_VERSIONS3} && rm -rf ~/.pyenv/cache/Python-*.tar.xz
+
+# 安装中文字体
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    fonts-arphic-uming \
+    fonts-noto-cjk \
+    locales \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# 设置时区
+RUN locale-gen zh_CN.UTF-8 && update-locale LANG=zh_CN.UTF-8
+
+# 设置语言环境
+ENV LANG=zh_CN.UTF-8
+ENV LC_ALL=zh_CN.UTF-8
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ibus \
+    ibus-pinyin \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN ibus-daemon -d -x
+
+ENV GTK_IM_MODULE=ibus
+ENV QT_IM_MODULE=ibus
+ENV XMODIFIERS=@im=ibus
+
+# 配置启动脚本
+RUN wget $START_BASH -O ~/start.sh && chmod +x ~/start.sh
+
+
+# 启动PyCharm
+CMD ["sh", "-c", "~/start.sh"]
+
+# docker build -t pycharm-container -f Dockerfile_Pycharm2025.1 .
+# xhost +local:docker
+# docker run -itd --privileged --gpus all --name pycharm --env DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v /home/jhc/Projects:/projects --device /dev:/dev --group-add audio pycharm-container
+
+
+# docker run -itd --privileged --gpus all --name pycharm --env DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v /home/jhc/Projects:/projects --device /dev/snd:/dev/snd --group-add audio pycharm-container
+
+# wget https://developer.download.nvidia.com/compute/cuda/12.6.3/local_installers/cuda_12.6.3_560.35.05_linux.run
+# sudo sh cuda_12.6.3_560.35.05_linux.run
+
+
+
+
+#! /bin/bash
+pkill -f java
+rm /root/.config/JetBrains/PyCharm${PYCHARM_VERSIONS}/.lock
+/opt/pycharm-${PYCHARM_VERSIONS}/bin/pycharm.sh
