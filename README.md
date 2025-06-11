@@ -1,4 +1,5 @@
-1 .此版本Dockerfile 支持Pycharm PRO 2025.1 版本
+1. 此版本Dockerfile 支持Pycharm PRO 2025.1 版本
+
 2. 镜像启动后可以在容器中访问本机的 Cuda 环境
 3. 到期后(30天),重启个新的容器,即可再次试用30天
 4. 此版本仅在Ubuntu Desktop 环境下通过xhost 跑通,其他环境自行测试
