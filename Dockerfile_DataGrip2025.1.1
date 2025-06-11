@@ -1,0 +1,115 @@
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu20.04
+
+# 设置时区
+ENV DEBIAN_FRONTEND=noninteractive TZ=Asia/Shanghai
+
+# 设置DataGrip
+ENV DataGrip_VERSIONS=2025.1.1
+ENV DataGrip_URL=https://bj.bcebos.com/petite-mark/public_read/vipshop/Jetbrains/DataGrip-${DataGrip_VERSIONS}.tar.gz
+
+# 设置DataGrip config
+ENV DataGrip_CONFIG=https://bj.bcebos.com/petite-mark/public_read/vipshop/Jetbrains/DataGrip${DataGrip_VERSIONS}_config.zip
+
+# 设置DataGrip plugins
+ENV DataGrip_PLUGINS_URL=https://bj.bcebos.com/petite-mark/public_read/vipshop/Jetbrains/DataGrip${DataGrip_VERSIONS}_plugins.zip
+
+# 设置DataGrip start.sh
+ENV START_BASH=https://bj.bcebos.com/petite-mark/public_read/vipshop/Jetbrains/restart_DataGrip.sh
+
+# 安装必要的依赖
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    sudo \
+    openjdk-11-jdk \
+    libx11-6 \
+    libxcomposite1 \
+    libxrandr2 \
+    libxss1 \
+    libgdk-pixbuf2.0-0 \
+    libgtk-3-0 \
+    xauth \
+    libbz2-dev \
+    libncurses5-dev \
+    libffi-dev \
+    libreadline-dev \
+    libssl-dev \
+    zlib1g-dev \
+    build-essential \
+    libsqlite3-dev \
+    tk-dev \
+    libgdbm-dev \
+    libc6-dev \
+    liblzma-dev \
+    libncursesw5-dev \
+    git \
+    python3-pip \
+    python-is-python3 \
+    wget \
+    unzip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# 下载并安装DataGrip
+RUN wget ${DataGrip_URL} -O /tmp/DataGrip.tar.gz \
+    && tar -xvzf /tmp/DataGrip.tar.gz -C /opt/ \
+    && rm /tmp/DataGrip.tar.gz
+
+# 设置DataGrip环境变量
+ENV DataGrip_HOME=/opt/DataGrip-${DataGrip_VERSIONS}
+ENV PATH=${DataGrip_HOME}/bin:$PATH
+
+# 配置 DataGrip 缓存
+RUN wget ${DataGrip_CONFIG} -O ./DataGrip${DataGrip_VERSIONS}.zip && \
+    mkdir -p ~/.config/JetBrains && \
+    tar -xvzf DataGrip${DataGrip_VERSIONS}.zip -C ~/.config/JetBrains/ && \
+    rm DataGrip${DataGrip_VERSIONS}.zip
+    
+# 配置 DataGrip 插件
+RUN wget ${DataGrip_PLUGINS_URL} -O DataGrip${DataGrip_VERSIONS}.zip && \
+    mkdir -p ~/.local/share/JetBrains && \
+    tar -xvzf DataGrip${DataGrip_VERSIONS}.zip -C ~/.local/share/JetBrains && \
+    rm DataGrip${DataGrip_VERSIONS}.zip
+
+# 安装中文字体
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    fonts-arphic-uming \
+    fonts-noto-cjk \
+    locales \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# 设置时区
+RUN locale-gen zh_CN.UTF-8 && update-locale LANG=zh_CN.UTF-8
+
+# 设置语言环境
+ENV LANG=zh_CN.UTF-8
+ENV LC_ALL=zh_CN.UTF-8
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ibus \
+    ibus-pinyin \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN ibus-daemon -d -x
+
+ENV GTK_IM_MODULE=ibus
+ENV QT_IM_MODULE=ibus
+ENV XMODIFIERS=@im=ibus
+
+# 配置启动脚本
+# RUN wget ${START_BASH} -O ~/start.sh && chmod +x ~/start.sh
+RUN echo -e '#! /bin/bash\npkill -f java\nrm /root/.config/JetBrains/PyCharm${PYCHARM_VERSIONS}/.lock\n/opt/pycharm-${PYCHARM_VERSIONS}/bin/pycharm.sh' > ~/start.sh && chmod +x ~/start.sh
+
+
+# 启动DataGrip
+CMD ["sh", "-c", "~/start.sh"]
+
+# docker build -t datagrip-container -f ./Dockerfile_DataGrip2025.1.1 .
+# xhost +local:docker
+
+# docker run -itd --privileged --gpus all --name DataGrip --env DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v /home/jhc/Projects:/projects datagrip-container
+
+# wget https://developer.download.nvidia.com/compute/cuda/12.6.3/local_installers/cuda_12.6.3_560.35.05_linux.run
+# sudo sh cuda_12.6.3_560.35.05_linux.run
+
+
