@@ -1,0 +1,174 @@
+{
+  "inbounds": [
+    {
+      "type": "mixed",
+      "tag": "mixed-in",
+      "listen": "::",
+      "listen_port": 10808,
+      "sniff": true,
+      "set_system_proxy": false
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "direct",
+      "tag": "direct"
+    },
+    {
+      "type": "block",
+      "tag": "block"
+    },
+    {
+      "type": "vmess",
+      "tag": "vmess-51job",
+      "server": "sslvpn.51job.com",
+      "server_port": 1443,
+      "uuid": "a6a0d901-67e9-460a-90b5-634c5c4f9782",
+      "alter_id": 64,
+      "tls": {
+        "enabled": true,
+        "insecure": false
+      },
+      "network": "wss",
+      "ws": {
+        "path": "/634c5c4f9782",
+        "headers": {
+          "Host": "centos7"
+        }
+      },
+      "udp": true
+    },
+    {
+      "type": "shadowsocks",
+      "tag": "ss-156.146.40.194",
+      "server": "156.146.40.194",
+      "server_port": 989,
+      "method": "aes-256-gcm",  // Shadowsocks 原生加密方法（替换 cipher）
+      "password": "f8f7aCzcPKbsF8p3",
+      "udp": true
+    },
+    {
+      "type": "trojan",
+      "tag": "trojan-plebai",
+      "server": "391907cc-swgsg0-t1bnjq-1krtb.cu.plebai.net",
+      "server_port": 15229,
+      "password": "60f6b4c4-9d70-11ed-a4d2-f23c9164ca5d",
+      "tls": {
+        "enabled": true,
+        "insecure": false
+      },
+      "udp": true
+    },
+    {
+      "type": "vmess",
+      "tag": "vmess-heduian",
+      "server": "v9.heduian.link",
+      "server_port": 30809,
+      "uuid": "cbb3f877-d1fb-344c-87a9-d153bffd5484",
+      "alter_id": 2,
+      "tls": {
+        "enabled": false
+      },
+      "network": "ws",
+      "ws": {
+        "path": "/oooo",
+        "headers": {
+          "Host": "th.lzj520hxw.dpdns.org"
+        }
+      },
+      "udp": true
+    },
+    {
+      "type": "trojan",
+      "tag": "trojan-heduian2",
+      "server": "103.103.245.158",
+      "server_port": 636,
+      "password": "9bfdde71b4c0",
+      "tls": {
+        "enabled": false
+      },
+      "udp": true
+    }
+  ],
+  "routing": {
+    "domain_strategy": "IPOnDemand",
+    "rules": [
+      {
+        "type": "field",
+        "domain": ["geosite:cn"],
+        "outbound_tag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": ["geoip:cn", "geoip:private"],
+        "outbound_tag": "direct"
+      },
+      {
+        "type": "field",
+        "domain": ["geosite:gfw"],
+        "outbound_tag": "vmess-51job"
+      },
+      {
+        "type": "field",
+        "domain": ["geosite:greatfire"],
+        "outbound_tag": "ss-156.146.40.194"
+      },
+      {
+        "type": "field",
+        "domain": ["geosite:telegram"],
+        "outbound_tag": "trojan-plebai"
+      }
+    ]
+  },
+  "dns": {
+    "enable": true,
+    "listen": "127.0.0.1:5335",
+    "default_nameserver": ["180.184.1.1", "119.29.29.29", "223.5.5.5"],
+    "ipv6": true,
+    "use_hosts": true,
+    "fake_ip_filter": ["*.n.n.srv.nintendo.net", "+.stun.playstation.net", "xbox.*.*.microsoft.com", "*.msftncsi.com", "*.msftconnecttest.com", "WORKGROUP", "*.lan", "stun.*.*.*", "stun.*.*", "time.windows.com", "time.nist.gov", "time.apple.com", "time.asia.apple.com", "*.ntp.org.cn", "*.openwrt.pool.ntp.org", "time1.cloud.tencent.com", "time.ustc.edu.cn", "pool.ntp.org", "ntp.ubuntu.com", "*.*.xboxlive.com", "speedtest.cros.wr.pvp.net"],
+    "nameserver": ["tls://223.5.5.5:853", "https://223.6.6.6/dns-query", "https://120.53.53.53/dns-query"],
+    "nameserver_policy": {
+      "+.tmall.com": "223.5.5.5",
+      "+.taobao.com": "223.5.5.5",
+      "+.alicdn.com": "223.5.5.5",
+      "+.aliyun.com": "223.5.5.5",
+      "+.alipay.com": "223.5.5.5",
+      "+.alibaba.com": "223.5.5.5",
+      "+.qq.com": "119.29.29.29",
+      "+.tencent.com": "119.29.29.29",
+      "+.weixin.com": "119.29.29.29",
+      "+.qpic.cn": "119.29.29.29",
+      "+.jd.com": "119.29.29.29",
+      "+.bilibili.com": "119.29.29.29",
+      "+.hdslb.com": "119.29.29.29",
+      "+.163.com": "119.29.29.29",
+      "+.126.com": "119.29.29.29",
+      "+.126.net": "119.29.29.29",
+      "+.127.net": "119.29.29.29",
+      "+.netease.com": "119.29.29.29",
+      "+.baidu.com": "223.5.5.5",
+      "+.bdstatic.com": "223.5.5.5",
+      "+.bilivideo.+": "119.29.29.29",
+      "+.iqiyi.com": "119.29.29.29",
+      "+.douyinvod.com": "180.184.1.1",
+      "+.douyin.com": "180.184.1.1",
+      "+.douyincdn.com": "180.184.1.1",
+      "+.douyinpic.com": "180.184.1.1",
+      "+.feishu.cn": "180.184.1.1"
+    },
+    "fallback": ["https://101.101.101.101/dns-query", "https://public.dns.iij.jp/dns-query", "https://208.67.220.220/dns-query"],
+    "fallback_filter": {
+      "geoip": true,
+      "ipcidr": ["240.0.0.0/4", "0.0.0.0/32", "223.75.236.241/32", "182.43.124.6/32", "106.74.25.198/32"],
+      "domain": ["+.bianyuan.xyz", "+.happynothings031.xyz", "+.jsdelivr.net", "+.proton.me"]
+    }
+  },
+  "hosts": {
+    "mtalk.google.com": "108.177.125.188"
+  },
+  "log_level": "info",
+  "experimental": {
+    "external_controller": "127.0.0.1:9090"
+  }
+}
