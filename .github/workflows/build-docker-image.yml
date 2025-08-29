@@ -32,7 +32,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           username: jhc0000abc
-          password: dckr_pat_TOw40LqE6RLQoQA1HEg5hYpNF4w
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # 步骤 3: 提取元数据以生成镜像标签
       # 这个操作会自动创建一些有用的标签，例如 'latest', 'sha-xxxxxx' 等
