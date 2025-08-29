@@ -41,6 +41,15 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Debug - List files in workspace
+        run: |
+          echo "Current directory is:"
+          pwd
+          echo "---"
+          echo "Listing all files and directories:"
+          ls -la
+      
+
       # 步骤 3: 提取元数据以生成镜像标签
       # 这个操作会自动创建一些有用的标签，例如 'latest', 'sha-xxxxxx' 等
       - name: Extract metadata for Docker
