@@ -24,30 +24,15 @@ jobs:
         uses: actions/checkout@v4
 
 
-      # --- 在这里添加临时调试步骤 ---
-      - name: Debug Secrets Availability
-        run: |
-          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
-            echo "错误：DOCKERHUB_USERNAME secret 未设置或为空！"
-            exit 1
-          else
-            echo "成功：DOCKERHUB_USERNAME secret 已设置。"
-          fi
-          
-          if [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
-            echo "错误：DOCKERHUB_TOKEN secret 未设置或为空！"
-            exit 1
-          else
-            echo "成功：DOCKERHUB_TOKEN secret 已设置。"
-          fi
+
 
       # 步骤 2: 登录到 Docker Hub
       # 使用前面在 GitHub Secrets 中配置的用户名和访问令牌
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: jhc0000abc
+          password: dckr_pat_TOw40LqE6RLQoQA1HEg5hYpNF4w
 
       # 步骤 3: 提取元数据以生成镜像标签
       # 这个操作会自动创建一些有用的标签，例如 'latest', 'sha-xxxxxx' 等
