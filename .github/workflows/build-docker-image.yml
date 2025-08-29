@@ -23,6 +23,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+
+      # --- 在这里添加临时调试步骤 ---
+      - name: Debug Secrets Availability
+        run: |
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+            echo "错误：DOCKERHUB_USERNAME secret 未设置或为空！"
+            exit 1
+          else
+            echo "成功：DOCKERHUB_USERNAME secret 已设置。"
+          fi
+          
+          if [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            echo "错误：DOCKERHUB_TOKEN secret 未设置或为空！"
+            exit 1
+          else
+            echo "成功：DOCKERHUB_TOKEN secret 已设置。"
+          fi
+
       # 步骤 2: 登录到 Docker Hub
       # 使用前面在 GitHub Secrets 中配置的用户名和访问令牌
       - name: Log in to Docker Hub
