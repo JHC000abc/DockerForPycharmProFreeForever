@@ -1,17 +1,21 @@
 # 工作流名称
-name: Build and Test Docker Image Locally
+name: Build and Push Docker Image to Docker Hub
 
 # 触发工作流的事件
 on:
+  # 当有代码推送到 main 分支时触发
   push:
     branches: [ "main" ]
+  # 允许手动触发
   workflow_dispatch:
 
 # 定义作业
 jobs:
-  build-and-test:
+  build-and-push:
     # 指定运行环境
     runs-on: ubuntu-latest
+    # (如果镜像过大，仍需使用大型运行器)
+    # runs-on: ubuntu-latest-4-cores
 
     # 定义步骤
     steps:
@@ -19,24 +23,44 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 步骤 2: 设置 Docker Buildx
+
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 512
+          swap-size-mb: 204800
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+
+      # 步骤 2: 登录到 Docker Hub
+      # 使用前面在 GitHub Secrets 中配置的用户名和访问令牌
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 步骤 3: 提取元数据以生成镜像标签
+      # 这个操作会自动创建一些有用的标签，例如 'latest', 'sha-xxxxxx' 等
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ vars.DOCKERHUB_USERNAME }}/pycharm # <-- 【重要】请替换为您的用户名和仓库名
+
+      # 步骤 4: 设置 Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 步骤 3: 构建镜像并加载到本地 Docker
-      # The key change is using 'load: true' instead of 'push: true'
-      - name: Build and load Docker image
+      # 步骤 5: 构建并推送到 Docker Hub
+      # 这个操作会将构建和推送合并为一步，非常高效
+      - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
-          load: true # ✅ Loads the image to the runner's Docker daemon
-          tags: jhc0000abc/pycharm2025.2:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # 步驟 4: 检查已加载的镜像
-      # This step can now access the image because it was loaded locally
-      - name: Inspect Image
-        run: |
-          echo "Inspecting the built image..."
-          docker image inspect jhc0000abc/pycharm2025.2:latest
+          push: true # 设置为 true 才会执行推送操作
+          tags: ${{ steps.meta.outputs.tags }} # 使用上一步生成的标签
+          labels: ${{ steps.meta.outputs.labels }} # 添加推荐的元数据标签
+          cache-from: type=gha # 启用 GitHub Actions 的构建缓存
+          cache-to: type=gha,mode=max # 将缓存写回，以加速后续构建
