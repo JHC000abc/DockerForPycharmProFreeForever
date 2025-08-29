@@ -29,9 +29,9 @@ jobs:
         with:
           root-reserve-mb: 512
           swap-size-mb: 16384
-          remove-dotnet: 'true'
-          remove-android: 'true'
-          remove-haskell: 'true'
+
+      - name: Checkout repository again into the new space
+        uses: actions/checkout@v4
 
       # 步骤 2: 登录到 Docker Hub
       # 使用前面在 GitHub Secrets 中配置的用户名和访问令牌
@@ -67,7 +67,7 @@ jobs:
         with:
           context: .
           # 新增下面这一行，以明确指定你的 Dockerfile 文件名
-          file: ./Dockerfile
+          file: Dockerfile
           push: true # 设置为 true 才会执行推送操作
           tags: ${{ steps.meta.outputs.tags }} # 使用上一步生成的标签
           labels: ${{ steps.meta.outputs.labels }} # 添加推荐的元数据标签
