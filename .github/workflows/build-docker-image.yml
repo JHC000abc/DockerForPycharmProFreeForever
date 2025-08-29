@@ -1,0 +1,52 @@
+# 工作流名称，将显示在 GitHub Actions 页面
+name: Build and Package Docker Image
+
+# 定义触发工作流的事件
+on:
+  # 当有代码推送到 main 分支时触发
+  push:
+    branches: [ "main" ]
+  # 允许在 GitHub Actions 页面手动触发此工作流
+  workflow_dispatch:
+
+# 定义工作流中的作业（jobs）
+jobs:
+  build-and-package:
+    # 指定作业运行的虚拟环境，这里使用最新的 Ubuntu 系统
+    runs-on: ubuntu-latest
+
+    # 定义作业中的步骤（steps）
+    steps:
+      # 步骤 1: 检出代码
+      # 使用官方的 actions/checkout@v4 操作来获取您的仓库代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 步骤 2: 设置 Docker Buildx
+      # Buildx 是一个 Docker CLI 插件，可以扩展构建功能，是推荐的最佳实践
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 步骤 3: 构建 Docker 镜像
+      # 使用标准的 'docker build' 命令
+      # --tag 参数为镜像命名和打标签，方便后续引用
+      # '.' 表示 DockerfilePycharmLatest 位于仓库的根目录
+      - name: Build Docker image
+        run: docker build -f DockerfilePycharmLatest -t pycharm-dev-env:latest .
+
+      # 步骤 4: 将 Docker 镜像保存为 .tar 文件
+      # 使用 'docker save' 命令将构建好的镜像打包成一个 tar 归档文件
+      # --output 参数指定输出文件名
+      - name: Save Docker image to a tar file
+        run: docker save --output pycharm-dev-env.tar pycharm-dev-env:latest
+
+      # 步骤 5: 上传 .tar 文件作为产物
+      # 使用官方的 actions/upload-artifact@v4 操作
+      # 这样，工作流运行结束后，您就可以在页面上下载这个文件
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          # 'name' 是您在下载页面看到的产物名称
+          name: pycharm-docker-image
+          # 'path' 是要上传的文件的路径
+          path: pycharm-dev-env.tar
